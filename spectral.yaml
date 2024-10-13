@@ -1,0 +1,440 @@
+extends: spectral:oas
+functionsDir: './functions'
+functions:
+  - errorResponse
+  - namingConvention
+  - paginationParameters
+  - parameterNames
+  - uniqueParameterNames
+  - parameterDescription
+  - pathParameterNames
+  - pathParameterOrder
+  - pathParameterSchema
+  - defaultValueNotAllowedForRequiredProperties
+  - putRequestResponseSchema
+  - responseOnlySchemaMarkedReadOnly
+  - schemaTypeAndFormat
+  - unusedDefinition
+  - apiVersion
+rules:
+  info-contact: off
+  no-$ref-siblings: off
+  oas2-api-host: off
+  oas2-api-schemes: off
+  oas2-unused-definition: off
+  openapi-tags: off
+  operation-description: off
+  operation-tags: off
+  operation-tag-defined: off
+
+  # Note: The Spectral VSCode extension will not display "hint" messages, so
+  # use "info" rather than "hint".
+
+  lmn-additional-properties-and-properties:
+    description: Don't specify additionalProperties as a sibling of properties.
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given: $..[?(@object() && @.type === 'object' && @.properties)]
+    then:
+      field: additionalProperties
+      function: falsy
+
+  lmn-additional-properties-object:
+    description: additionalProperties with type object is a common error.
+    severity: info
+    formats: ['oas2', 'oas3']
+    # This rule produces redundant errors if run on the resolved spec.
+    resolved: false
+    given: $..[?(@property == 'additionalProperties' && @.type == 'object' && @.properties == undefined)]
+    then:
+      function: falsy
+
+  lmn-default-response:
+    description: All operations should have a default (error) response.
+    message: Operation is missing a default response.
+    severity: warn
+    given: $.paths.*.*.responses
+    then:
+      field: default
+      function: truthy
+
+  lmn-datetime-naming-convention:
+    description: Use an "_at" suffix in names of date-time values.
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given: $
+    then:
+      function: namingConvention
+      functionOptions:
+        type: date-time
+        match: '_at$'
+
+  lmn-delete-response-codes:
+    description: A delete operation should have a 204 response.
+    message: A delete operation should have a `204` response.
+    severity: warn
+    formats: ['oas2', 'oas3']
+    # The responses object of a delete operation
+    given: $.paths[*].delete.responses
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          oneOf:
+            - required: ['202']
+            - required: ['204']
+              not:
+                required: ['200']
+
+  lmn-error-response:
+    description: Error response body should conform to LMN API Guidelines.
+    message: '{{error}}'
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given: $.paths[*][*].responses
+    then:
+      function: errorResponse
+
+  lmn-formdata:
+    description: Check for appropriate use of formData parameters.
+    severity: info
+    formats: ['oas2', 'oas3']
+    given: $.paths.*[get,put,post,patch,delete,options,head].parameters.[?(@.in == "formData")]
+    then:
+      function: falsy
+
+  lmn-204-no-response-body:
+    description: A 204 response should have no response body.
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given: $.paths[*][*].responses.204
+    then:
+      field: content
+      function: falsy
+
+  lmn-operation-summary-or-description:
+    description: Operation should have a summary or description.
+    message: Operation should have a summary or description.
+    severity: warn
+    given:
+      - $.paths[*][?( @property === 'get' && !@.summary && !@.description )]
+      - $.paths[*][?( @property === 'put' && !@.summary && !@.description )]
+      - $.paths[*][?( @property === 'post' && !@.summary && !@.description )]
+      - $.paths[*][?( @property === 'patch' && !@.summary && !@.description )]
+      - $.paths[*][?( @property === 'delete' && !@.summary && !@.description )]
+      - $.paths[*][?( @property === 'options' && !@.summary && !@.description )]
+      - $.paths[*][?( @property === 'head' && !@.summary && !@.description )]
+      - $.paths[*][?( @property === 'trace' && !@.summary && !@.description )]
+    then:
+      function: falsy
+
+  lmn-pagination-parameters:
+    description: Pagination parameters must conform to LMN guidelines.
+    message: '{{error}}'
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given:
+      - $.paths.*[get,post]
+    then:
+      function: paginationParameters
+
+  lmn-parameter-default-not-allowed:
+    description: A required parameter should not specify a default value.
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given:
+      - $.paths[*].parameters.[?(@.required)]
+      - $.paths.*[get,put,post,patch,delete,options,head].parameters.[?(@.required)]
+      - $.components.parameters[*].[?(@.required)]
+    then:
+      field: default
+      function: falsy
+
+  lmn-parameter-description:
+    description: All parameters should have a description.
+    message: Parameter should have a description.
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given:
+      - $.paths[*].parameters.*
+      - $.paths.*[get,put,post,patch,delete,options,head].parameters.*
+    then:
+      function: parameterDescription
+
+  lmn-parameter-names-convention:
+    description: Parameter names should conform to LMN naming conventions.
+    message: '{{error}}'
+    severity: warn
+    given:
+      - $.paths[*].parameters.*
+      - $.paths.*[get,put,post,patch,delete,options,head].parameters.*
+    then:
+      function: parameterNames
+
+  lmn-parameter-names-unique:
+    description: All parameter names for an operation should be case-insensitive unique.
+    message: '{{error}}'
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given: $.paths[*]
+    then:
+      function: uniqueParameterNames
+
+  lmn-parameter-order:
+    description: Path parameters must be in the same order as in the path.
+    message: '{{error}}'
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given: $.paths
+    then:
+      function: pathParameterOrder
+
+  # Patch on a path that does not end in path parameter is uncommon.
+  lmn-patch-path:
+    description: Patch on a path that does not end with a path parameter is uncommon.
+    severity: info
+    formats: ['oas2', 'oas3']
+    given: $.paths[?(!@path.match(/\}']$/))]
+    then:
+      field: patch
+      function: falsy
+
+  # Static path segments should be kebab-case
+  lmn-path-case-convention:
+    description: Static path segments should be kebab-case.
+    message: Static path segments should be kebab-case.
+    severity: error
+    formats: ['oas2', 'oas3']
+    given: $.paths.*~
+    then:
+      function: pattern
+      functionOptions:
+        # Check each path segment individually and ignore param segments
+        # Note: the ':' is only allowed in the final path segment
+        match: '^(\/([a-z][a-z0-9-]+|{[^}]+}))*\/([a-z][a-z0-9-]+|{[^}]*})?(:[A-Za-z0-9]+)?$'
+
+  lmn-path-characters:
+    description: Path should contain only recommended characters.
+    message: Path contains non-recommended characters.
+    severity: error
+    formats: ['oas2', 'oas3']
+    given: $.paths.*~
+    then:
+      function: pattern
+      functionOptions:
+        # Check each path segment individually and ignore param segments
+        # Note: the ':' is only allowed in the final path segment
+        match: '^(\/([0-9A-Za-z._~-]+|{[^}]+}))*\/([0-9A-Za-z._~-]+|{[^}]*})?(:[0-9A-Za-z._~-]+)?$'
+
+  lmn-path-parameter-names:
+    description: Path parameter names should be consistent across all paths.
+    message: '{{error}}'
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given: $.paths
+    then:
+      function: pathParameterNames
+
+  lmn-path-parameter-schema:
+    description: 'Path parameter should be type: string and specify maxLength and pattern.'
+    message: '{{error}}'
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given:
+      - $.paths[*].parameters[?(@.in == 'path')]
+      - $.paths[*][get,put,post,patch,delete,options,head].parameters[?(@.in == 'path')]
+    then:
+      function: pathParameterSchema
+
+  lmn-post-201-response:
+    description: Using post for a create operation is discouraged.
+    message: Using post for a create operation is discouraged.
+    severity: warn
+    formats: ['oas2']
+    given: $.paths[*].post.responses
+    then:
+      field: '201'
+      function: falsy
+
+  lmn-property-default-not-allowed:
+    description: A required property should not specify a default value.
+    message: '{{error}}'
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given:
+      # For OpenAPI 2.0 and 3.0, find all schemas in request bodies and responses
+      - $.paths[*].[put,post,patch].parameters.[?(@.in == 'body')].schema
+      - $.paths[*].[put,post,patch,delete].requestBody.content[*].schema # For OpenAPI 3.0 request bodies
+      - $.paths[*].[get,put,post,patch,delete].responses[*].schema # For responses in both 2.0 and 3.0
+    then:
+      function: defaultValueNotAllowedForRequiredProperties
+
+  lmn-property-description:
+    description: All schema properties should have a description.
+    message: Property should have a description.
+    severity: warn
+    given: $..properties.*
+    then:
+      field: description
+      function: truthy
+
+  lmn-property-names-convention:
+    description: Property names should be snake case.
+    message: Property name should be snake case.
+    severity: warn
+    # This rule can report false positives if run on the resolved spec.
+    # Issue: https://github.com/stoplightio/spectral/issues/1316
+    resolved: false
+    given: $..[?(@.type === 'object' && @.properties)].properties.*~
+    then:
+      function: casing
+      functionOptions:
+        type: snake
+
+  lmn-property-type:
+    description: All schema properties should have a defined type.
+    message: Property should have a defined type.
+    severity: warn
+    resolved: false
+    # Exclude properties that contains allOf or oneOf or anyOf to avoid false positives.
+    given: $..properties[?(@object() && @.$ref == undefined && @.allOf == undefined && @.oneOf == undefined && @.anyOf == undefined)]
+    then:
+      field: type
+      function: truthy
+
+  lmn-put-path:
+    description: Put on a path that does not end with a path parameter is uncommon.
+    severity: info
+    formats: ['oas2', 'oas3']
+    given: $.paths[*].put^~
+    then:
+      function: pattern
+      functionOptions:
+        match: '/\}$/'
+
+  lmn-put-request-and-response-body:
+    description: A PUT operation should use the same schema for the request and response body.
+    severity: info
+    formats: ['oas2']
+    # Run on the unresolved document so that we compare the $ref'ed schema
+    resolved: false
+    given: $.paths[*].put
+    then:
+      function: putRequestResponseSchema
+
+  lmn-readonly-in-response-schema:
+    description: Properties in response-only schemas should not be marked as readOnly true
+    severity: warn
+    formats: ['oas2']
+    given: $.definitions[*]
+    then:
+      function: responseOnlySchemaMarkedReadOnly
+
+  lmn-request-body-not-allowed:
+    description: A get or delete operation must not accept a body parameter.
+    severity: error
+    formats: ['oas2']
+    given:
+      - $.paths[*].[get,delete].parameters[*]
+    then:
+      field: in
+      function: pattern
+      functionOptions:
+        notMatch: '/^body$/'
+
+  lmn-request-body-optional:
+    description: Flag optional request body -- common oversight.
+    message: The body parameter is not marked as required.
+    severity: info
+    formats: ['oas2']
+    given:
+      # Don't flag request body if it explicitly specifies required: false
+      - $.paths[*].[put,post,patch].parameters.[?(@.in == 'body' && @.required == undefined)]
+    then:
+      function: falsy
+
+  lmn-request-body-type:
+    description: Request body schema must not be a bare array.
+    severity: warn
+    formats: ['oas2']
+    given:
+      - $.paths[*].[put,post,patch].parameters.[?(@.in == 'body')].schema
+    then:
+      field: type
+      function: pattern
+      functionOptions:
+        notMatch: '/^array$/'
+
+  lmn-response-body-type:
+    description: Response body schema must not be a bare array.
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given: $.paths[*][*][responses][*].schema
+    then:
+      field: type
+      function: pattern
+      functionOptions:
+        notMatch: '/^array$/'
+
+  lmn-schema-description-or-title:
+    description: All schemas should have a description or title.
+    message: Schema should have a description or title.
+    severity: warn
+    formats: ['oas2', 'oas3']
+    given:
+      - $.definitions[?(!@.description && !@.title)]
+      - $.components.schemas[?(!@.description && !@.title)]
+    then:
+      function: falsy
+
+  lmn-schema-names-convention:
+    description: Schema names should be Pascal case.
+    message: Schema name should be Pascal case.
+    severity: info
+    formats: ['oas2']
+    given: $.definitions.*~
+    then:
+      # Pascal case with optional "." separator
+      function: pattern
+      functionOptions:
+        match: '^([A-Z][a-z0-9]+\.?)*[A-Z][a-z0-9]+$'
+
+  lmn-schema-type-and-format:
+    description: Schema should use well-defined type and format.
+    message: '{{error}}'
+    severity: warn
+    formats: ['oas2']
+    given:
+      - $.paths[*].[put,post,patch].parameters.[?(@.in == 'body')].schema
+      - $.paths[*].[get,put,post,patch,delete].responses[*].schema
+    then:
+      function: schemaTypeAndFormat
+
+  # All success responses except 204 should define a response body
+  lmn-success-response-body:
+    description: All success responses except 204 should define a response body.
+    severity: warn
+    formats: ['oas2']
+    # list http methods explicitly to exclude head
+    # exclude 202 to avoid duplication with lmn-lro-response-schema rule
+    given: $.paths[*][get,put,post,patch,delete].responses[?(@property >= 200 && @property < 300 && @property != '202' && @property != '204')]
+    then:
+      field: schema
+      function: truthy
+
+  lmn-unused-definition:
+    description: Potentially unused definition has been detected.
+    severity: warn
+    formats: ['oas2']
+    resolved: false
+    given: $.definitions
+    then:
+      function: unusedDefinition
+
+  lmn-version-policy:
+    description: Ensure the URL contains a version identifier (e.g., /v1/).
+    message: 'The path should contain a version identifier (e.g., v1, v2).'
+    severity: error
+    given: $.paths[*]
+    then:
+      function: apiVersion
