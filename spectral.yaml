@@ -346,7 +346,7 @@ rules:
     description: Flag optional request body -- common oversight.
     message: The body parameter is not marked as required.
     severity: info
-    formats: ['oas2']
+    formats: ['oas2', 'oas3']
     given:
       # Don't flag request body if it explicitly specifies required: false
       - $.paths[*].[put,post,patch].parameters.[?(@.in == 'body' && @.required == undefined)]
