@@ -8,7 +8,7 @@ import { loadRuleset, openApiSpec } from './testHelpers.js';
 
 const ruleErrorCode = 'lmn-parameter-description';
 
-describe('lmn-parameter-description rule', () => {
+describe(ruleErrorCode, () => {
   let spectral: Spectral;
 
   before(async () => {

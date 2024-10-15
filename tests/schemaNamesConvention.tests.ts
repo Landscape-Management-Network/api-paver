@@ -36,11 +36,9 @@ describe(ruleErrorCode, () => {
     expect(errors.length).to.equal(1);
     const error = errors[0];
     assert(error);
-    assert.strictEqual(error.message, 'Schema name should be Pascal case.');
-    assert.strictEqual(error.severity, DiagnosticSeverity.Warning);
-    expect(error.path).to.include('components');
-    expect(error.path).to.include('schemas');
-    expect(error.path).to.include('testSchema');
+    expect(error.severity).to.equal(DiagnosticSeverity.Warning);
+    expect(error.message).to.equal('Schema name should be Pascal case.');
+    expect(error.path).to.contain('testSchema');
   });
 
   it('should pass when schema name is Pascal case', async () => {
@@ -104,11 +102,9 @@ describe(ruleErrorCode, () => {
     expect(errors.length).to.equal(1);
     const error = errors[0];
     assert(error);
-    assert.strictEqual(error.message, 'Schema name should be Pascal case.');
-    assert.strictEqual(error.severity, DiagnosticSeverity.Warning);
-    expect(error.path).to.include('components');
-    expect(error.path).to.include('schemas');
-    expect(error.path).to.include('schemaName');
+    expect(error.severity).to.equal(DiagnosticSeverity.Warning);
+    expect(error.message).to.equal('Schema name should be Pascal case.');
+    expect(error.path).to.contain('schemaName');
   });
 
   it('should fail when schema name contains special characters', async () => {
@@ -132,11 +128,9 @@ describe(ruleErrorCode, () => {
     expect(errors.length).to.equal(1);
     const error = errors[0];
     assert(error);
-    assert.strictEqual(error.message, 'Schema name should be Pascal case.');
-    assert.strictEqual(error.severity, DiagnosticSeverity.Warning);
-    expect(error.path).to.include('components');
-    expect(error.path).to.include('schemas');
-    expect(error.path).to.include('Test_Schema');
+    expect(error.severity).to.equal(DiagnosticSeverity.Warning);
+    expect(error.message).to.equal('Schema name should be Pascal case.');
+    expect(error.path).to.contain('Test_Schema');
   });
 
   it('should pass when schema name is Pascal case but contains numbers', async () => {

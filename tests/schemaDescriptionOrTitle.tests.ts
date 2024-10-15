@@ -36,9 +36,9 @@ describe(ruleErrorCode, () => {
     expect(errors.length).to.equal(1);
     const error = errors[0];
     assert(error);
-    assert.strictEqual(error.message, 'Schema should have a description or title.');
-    assert.strictEqual(error.severity, DiagnosticSeverity.Warning);
-    expect(error.path).to.include('TestSchema');
+    expect(error.severity).to.equal(DiagnosticSeverity.Warning);
+    expect(error.message).to.equal('Schema should have a description or title.');
+    expect(error.path).to.contain('TestSchema');
   });
 
   it('should pass when a schema has a description', async () => {

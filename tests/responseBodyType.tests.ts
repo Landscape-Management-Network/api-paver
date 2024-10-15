@@ -79,8 +79,8 @@ describe(ruleErrorCode, () => {
     expect(errors.length).to.equal(1);
     const error = errors[0];
     assert(error);
-    assert.strictEqual(error.message, 'Response body schema must not be a bare array. Please wrap the array in an object.');
-    assert.strictEqual(error.severity, DiagnosticSeverity.Warning);
+    expect(error.severity).to.equal(DiagnosticSeverity.Warning);
+    expect(error.message).to.equal('Response body schema must not be a bare array. Please wrap the array in an object.');
     expect(error.path).to.contain('/test');
   });
 
@@ -114,8 +114,8 @@ describe(ruleErrorCode, () => {
     expect(errors.length).to.equal(1);
     const error = errors[0];
     assert(error);
-    assert.strictEqual(error.message, 'Response body schema must not be a bare array. Please wrap the array in an object.');
-    assert.strictEqual(error.severity, DiagnosticSeverity.Warning);
+    expect(error.severity).to.equal(DiagnosticSeverity.Warning);
+    expect(error.message).to.equal('Response body schema must not be a bare array. Please wrap the array in an object.');
     expect(error.path).to.contain('/test');
   });
 });
