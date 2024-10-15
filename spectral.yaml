@@ -12,7 +12,7 @@ functions:
   - pathParameterSchema
   - defaultValueNotAllowedForRequiredProperties
   - putRequestResponseSchema
-  - responseOnlySchemaMarkedReadOnly
+  - readOnlyPropertiesInResponseOnlySchema
   - schemaTypeAndFormat
   - unusedDefinition
   - apiVersion
@@ -322,13 +322,13 @@ rules:
     then:
       function: putRequestResponseSchema
 
-  lmn-readonly-in-response-schema:
-    description: Properties in response-only schemas should not be marked as readOnly true
+  lmn-readonly-properties-in-response-only-schema:
+    description: Property of response-only schema should not be marked readOnly
     severity: warn
-    formats: ['oas2']
+    formats: ['oas2', 'oas3']
     given: $.definitions[*]
     then:
-      function: responseOnlySchemaMarkedReadOnly
+      function: readOnlyPropertiesInResponseOnlySchema
 
   lmn-request-body-not-allowed:
     description: A get or delete operation must not accept a body parameter.
