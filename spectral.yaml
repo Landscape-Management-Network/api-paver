@@ -14,7 +14,6 @@ functions:
   - putRequestResponseSchema
   - readOnlyPropertiesInResponseOnlySchema
   - schemaTypeAndFormat
-  - unusedDefinition
   - apiVersion
 rules:
   info-contact: off
@@ -406,10 +405,14 @@ rules:
     description: Schema should use well-defined type and format.
     message: '{{error}}'
     severity: warn
-    formats: ['oas2']
+    formats: ['oas2', 'oas3']
     given:
+      # OAS2 paths
       - $.paths[*].[put,post,patch].parameters.[?(@.in == 'body')].schema
       - $.paths[*].[get,put,post,patch,delete].responses[*].schema
+      # OAS3 paths
+      - $.paths[*].[put,post,patch].requestBody.content.[*].schema
+      - $.paths[*].[get,put,post,patch,delete].responses[*].content.[*].schema
     then:
       function: schemaTypeAndFormat
 
@@ -424,15 +427,6 @@ rules:
     then:
       field: schema
       function: truthy
-
-  lmn-unused-definition:
-    description: Potentially unused definition has been detected.
-    severity: warn
-    formats: ['oas2']
-    resolved: false
-    given: $.definitions
-    then:
-      function: unusedDefinition
 
   lmn-version-policy:
     description: Ensure the URL contains a version identifier (e.g., /v1/).
