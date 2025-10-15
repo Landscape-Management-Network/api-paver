@@ -44,7 +44,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install npms
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Test
         run: npm test
